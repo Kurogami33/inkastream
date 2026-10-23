@@ -23,10 +23,6 @@ class ExternalPlayer {
           package: o.value,
           arguments: <String, dynamic>{'title': title},
         );
-        if (o.value != null) {
-          final ok = await intent.canResolveActivity() ?? false;
-          if (!ok) continue;
-        }
         await intent.launch();
         return o.key;
       } catch (_) {
