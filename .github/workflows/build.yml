@@ -38,11 +38,31 @@ jobs:
       - name: Aplicar icono
         run: dart run flutter_launcher_icons
 
-      - name: Compilar APK debug
-        run: flutter build apk --debug
+      - name: Compilar APK release
+        run: flutter build apk --release --split-per-abi
+
+      - name: Firmar APK
+        env:
+          KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
+          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
+          KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
+        run: |
+          keytool -genkeypair -keystore "$RUNNER_TEMP/inka.jks" \
+            -storetype PKCS12 -alias "$KEY_ALIAS" \
+            -keyalg RSA -keysize 2048 -validity 10000 \
+            -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" \
+            -dname "CN=INKASTREAM, O=Inka, C=MX"
+          APKSIGNER=$(ls $ANDROID_HOME/build-tools/*/apksigner | sort -V | tail -1)
+          for f in build/app/outputs/flutter-apk/*-release.apk; do
+            "$APKSIGNER" sign --ks "$RUNNER_TEMP/inka.jks" \
+              --ks-key-alias "$KEY_ALIAS" \
+              --ks-pass env:KEYSTORE_PASSWORD \
+              --key-pass env:KEY_PASSWORD "$f"
+            "$APKSIGNER" verify "$f"
+          done
 
       - name: Subir APK
         uses: actions/upload-artifact@v4
         with:
           name: inkastream-apk
-          path: build/app/outputs/flutter-apk/app-debug.apk
+          path: build/app/outputs/flutter-apk/*-release.apk
