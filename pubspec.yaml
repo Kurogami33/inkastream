@@ -20,5 +20,15 @@ dependencies:
   url_launcher: ^6.3.0
   package_info_plus: ^8.0.0
 
+dev_dependencies:
+  flutter_launcher_icons: ^0.14.1
+
+flutter_launcher_icons:
+  android: true
+  ios: false
+  image_path: "assets/icon/icon.png"
+  adaptive_icon_background: "#0A0A0B"
+  adaptive_icon_foreground: "assets/icon/fg.png"
+
 flutter:
   uses-material-design: true
