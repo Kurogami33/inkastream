@@ -16,6 +16,10 @@ jobs:
           distribution: temurin
           java-version: "17"
 
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
       - uses: subosito/flutter-action@v2
         with:
           channel: stable
@@ -25,6 +29,14 @@ jobs:
 
       - name: Instalar paquetes
         run: flutter pub get
+
+      - name: Dibujar icono
+        run: |
+          pip install pillow
+          python tool/make_icon.py
+
+      - name: Aplicar icono
+        run: dart run flutter_launcher_icons
 
       - name: Compilar APK debug
         run: flutter build apk --debug
