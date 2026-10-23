@@ -5,6 +5,7 @@ import '../engine/quick_add.dart';
 import '../models.dart';
 import '../store/source_store.dart';
 import '../theme.dart';
+import 'player_screen.dart';
 
 class SourcesScreen extends StatefulWidget {
   const SourcesScreen({super.key});
@@ -59,6 +60,20 @@ class _SourcesScreenState extends State<SourcesScreen> {
     await _reload();
   }
 
+  void _play(SourceManifest s) {
+    final raw = s.rules['links'];
+    if (s.kind != 'links' || raw is! List || raw.isEmpty) {
+      _msg('Esta fuente aún no se puede reproducir directo.');
+      return;
+    }
+    final links = raw
+        .map((e) => StreamLink(url: e.toString(), label: s.name))
+        .toList();
+    Navigator.of(context).push(MaterialPageRoute(
+      builder: (_) => PlayerScreen(title: s.name, links: links),
+    ));
+  }
+
   Future<void> _onMenu(SourceManifest s, String action) async {
     if (action == 'copy') {
       await Clipboard.setData(ClipboardData(text: QuickAdd.exportCode(s)));
@@ -110,6 +125,7 @@ class _SourcesScreenState extends State<SourcesScreen> {
                         border: Border.all(color: AppColors.redSoft),
                       ),
                       child: ListTile(
+                        onTap: () => _play(s),
                         title: Text(s.name),
                         subtitle: Text(
                           s.baseUrl,
