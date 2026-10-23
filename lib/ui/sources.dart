@@ -39,68 +39,19 @@ class _SourcesScreenState extends State<SourcesScreen> {
   }
 
   Future<void> _openAdd() async {
-    final ctrl = TextEditingController();
-    String? error;
-    await showModalBottomSheet(
+    final m = await showModalBottomSheet<SourceManifest>(
       context: context,
       isScrollControlled: true,
       backgroundColor: AppColors.surface,
       shape: const RoundedRectangleBorder(
         borderRadius: BorderRadius.vertical(top: Radius.circular(kCardRadius)),
       ),
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setSheet) => Padding(
-          padding: EdgeInsets.fromLTRB(
-              20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              const Text('Añadir fuente',
-                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
-              const SizedBox(height: 8),
-              const Text(
-                'Pega una receta JSON, un código corto o un enlace directo (http...).',
-                style: TextStyle(color: AppColors.textSecondary),
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: ctrl,
-                minLines: 3,
-                maxLines: 6,
-                decoration: const InputDecoration(hintText: 'Pega aquí'),
-              ),
-              if (error != null) ...[
-                const SizedBox(height: 8),
-                Text(error!, style: const TextStyle(color: AppColors.error)),
-              ],
-              const SizedBox(height: 12),
-              SizedBox(
-                width: double.infinity,
-                child: FilledButton(
-                  onPressed: () async {
-                    final input = ctrl.text.trim();
-                    try {
-                      final SourceManifest m = input.startsWith('http')
-                          ? QuickAdd.fromDirectLink(input)
-                          : QuickAdd.parseRecipe(input);
-                      await _store.add(m);
-                      if (ctx.mounted) Navigator.pop(ctx);
-                      await _reload();
-                      _msg('Fuente "${m.name}" añadida');
-                    } on FormatException catch (e) {
-                      setSheet(() => error = e.message);
-                    }
-                  },
-                  child: const Text('Añadir'),
-                ),
-              ),
-            ],
-          ),
-        ),
-      ),
+      builder: (_) => const _AddSheet(),
     );
-    ctrl.dispose();
+    if (m == null) return;
+    await _store.add(m);
+    await _reload();
+    _msg('Fuente "${m.name}" añadida');
   }
 
   Future<void> _toggle(SourceManifest s, bool v) async {
@@ -191,6 +142,76 @@ class _SourcesScreenState extends State<SourcesScreen> {
                     );
                   },
                 ),
+    );
+  }
+}
+
+class _AddSheet extends StatefulWidget {
+  const _AddSheet();
+
+  @override
+  State<_AddSheet> createState() => _AddSheetState();
+}
+
+class _AddSheetState extends State<_AddSheet> {
+  final _ctrl = TextEditingController();
+  String? _error;
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  void _submit() {
+    final input = _ctrl.text.trim();
+    try {
+      final SourceManifest m = input.startsWith('http')
+          ? QuickAdd.fromDirectLink(input)
+          : QuickAdd.parseRecipe(input);
+      Navigator.pop(context, m);
+    } on FormatException catch (e) {
+      setState(() => _error = e.message);
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.fromLTRB(
+          20, 20, 20, MediaQuery.of(context).viewInsets.bottom + 20),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Añadir fuente',
+              style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold)),
+          const SizedBox(height: 8),
+          const Text(
+            'Pega una receta JSON, un código corto o un enlace directo (http...).',
+            style: TextStyle(color: AppColors.textSecondary),
+          ),
+          const SizedBox(height: 12),
+          TextField(
+            controller: _ctrl,
+            minLines: 3,
+            maxLines: 6,
+            decoration: const InputDecoration(hintText: 'Pega aquí'),
+          ),
+          if (_error != null) ...[
+            const SizedBox(height: 8),
+            Text(_error!, style: const TextStyle(color: AppColors.error)),
+          ],
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton(
+              onPressed: _submit,
+              child: const Text('Añadir'),
+            ),
+          ),
+        ],
+      ),
     );
   }
 }
