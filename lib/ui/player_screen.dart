@@ -1,8 +1,10 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:material_symbols_icons/symbols.dart';
 import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import '../models.dart';
+import '../player/external.dart';
 import '../theme.dart';
 
 class PlayerScreen extends StatefulWidget {
@@ -61,6 +63,18 @@ class _PlayerScreenState extends State<PlayerScreen> {
     _switching = false;
   }
 
+  Future<void> _openExternal() async {
+    final url = widget.links[_index].url;
+    await _player.pause();
+    final used = await ExternalPlayer.open(url, title: widget.title);
+    if (!mounted) return;
+    ScaffoldMessenger.of(context).showSnackBar(SnackBar(
+      content: Text(used == null
+          ? 'No se encontró ningún reproductor externo.'
+          : 'Abierto en $used'),
+    ));
+  }
+
   @override
   void dispose() {
     for (final s in _subs) {
@@ -80,6 +94,17 @@ class _PlayerScreenState extends State<PlayerScreen> {
             AspectRatio(
               aspectRatio: 16 / 9,
               child: Video(controller: _controller),
+            ),
+            Padding(
+              padding: const EdgeInsets.fromLTRB(12, 12, 12, 0),
+              child: SizedBox(
+                width: double.infinity,
+                child: FilledButton.icon(
+                  onPressed: _openExternal,
+                  icon: const Icon(Symbols.open_in_new_rounded),
+                  label: const Text('Abrir en VLC / MX Player'),
+                ),
+              ),
             ),
             if (_status != null)
               Padding(
