@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../theme.dart';
+import 'sources.dart';
 
 class Shell extends StatefulWidget {
   const Shell({super.key});
@@ -12,16 +13,17 @@ class Shell extends StatefulWidget {
 class _ShellState extends State<Shell> {
   int _index = 0;
 
-  static const _titles = ['Inicio', 'Buscar', 'Fuentes', 'Ajustes'];
-
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       body: SafeArea(
         child: IndexedStack(
           index: _index,
-          children: [
-            for (final t in _titles) _Placeholder(title: t),
+          children: const [
+            _Placeholder(title: 'Inicio'),
+            _Placeholder(title: 'Buscar'),
+            SourcesScreen(),
+            _Placeholder(title: 'Ajustes'),
           ],
         ),
       ),
