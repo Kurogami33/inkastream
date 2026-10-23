@@ -44,20 +44,19 @@ jobs:
       - name: Firmar APK
         env:
           KEYSTORE_PASSWORD: ${{ secrets.KEYSTORE_PASSWORD }}
-          KEY_PASSWORD: ${{ secrets.KEY_PASSWORD }}
           KEY_ALIAS: ${{ secrets.KEY_ALIAS }}
         run: |
           keytool -genkeypair -keystore "$RUNNER_TEMP/inka.jks" \
             -storetype PKCS12 -alias "$KEY_ALIAS" \
             -keyalg RSA -keysize 2048 -validity 10000 \
-            -storepass "$KEYSTORE_PASSWORD" -keypass "$KEY_PASSWORD" \
+            -storepass "$KEYSTORE_PASSWORD" \
             -dname "CN=INKASTREAM, O=Inka, C=MX"
           APKSIGNER=$(ls $ANDROID_HOME/build-tools/*/apksigner | sort -V | tail -1)
           for f in build/app/outputs/flutter-apk/*-release.apk; do
             "$APKSIGNER" sign --ks "$RUNNER_TEMP/inka.jks" \
               --ks-key-alias "$KEY_ALIAS" \
               --ks-pass env:KEYSTORE_PASSWORD \
-              --key-pass env:KEY_PASSWORD "$f"
+              --key-pass env:KEYSTORE_PASSWORD "$f"
             "$APKSIGNER" verify "$f"
           done
 
