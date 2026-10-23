@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../theme.dart';
+import 'settings.dart';
 import 'sources.dart';
 
 class Shell extends StatefulWidget {
@@ -23,7 +24,7 @@ class _ShellState extends State<Shell> {
             _Placeholder(title: 'Inicio'),
             _Placeholder(title: 'Buscar'),
             SourcesScreen(),
-            _Placeholder(title: 'Ajustes'),
+            SettingsScreen(),
           ],
         ),
       ),
