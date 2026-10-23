@@ -27,6 +27,13 @@ jobs:
       - name: Generar carpeta android
         run: flutter create . --platforms=android --project-name inkastream --org com.inka
 
+      - name: Permiso de internet
+        run: |
+          F=android/app/src/main/AndroidManifest.xml
+          grep -q "android.permission.INTERNET" "$F" || \
+            sed -i '0,/<manifest[^>]*>/s//&\n    <uses-permission android:name="android.permission.INTERNET"\/>/' "$F"
+          grep -n "INTERNET" "$F"
+
       - name: Instalar paquetes
         run: flutter pub get
 
