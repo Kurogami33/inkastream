@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:material_symbols_icons/symbols.dart';
 import '../theme.dart';
+import 'home.dart';
 import 'search.dart';
 import 'settings.dart';
 import 'sources.dart';
@@ -14,6 +15,7 @@ class Shell extends StatefulWidget {
 
 class _ShellState extends State<Shell> {
   int _index = 0;
+  int _homeVersion = 0;
 
   @override
   Widget build(BuildContext context) {
@@ -21,11 +23,11 @@ class _ShellState extends State<Shell> {
       body: SafeArea(
         child: IndexedStack(
           index: _index,
-          children: const [
-            _Placeholder(title: 'Inicio'),
-            SearchScreen(),
-            SourcesScreen(),
-            SettingsScreen(),
+          children: [
+            HomeScreen(key: ValueKey(_homeVersion)),
+            const SearchScreen(),
+            const SourcesScreen(),
+            const SettingsScreen(),
           ],
         ),
       ),
@@ -33,7 +35,10 @@ class _ShellState extends State<Shell> {
         backgroundColor: AppColors.surface,
         indicatorColor: AppColors.redSoft,
         selectedIndex: _index,
-        onDestinationSelected: (i) => setState(() => _index = i),
+        onDestinationSelected: (i) => setState(() {
+          if (i == 0) _homeVersion++;
+          _index = i;
+        }),
         destinations: const [
           NavigationDestination(
             icon: Icon(Symbols.home_rounded),
@@ -52,24 +57,6 @@ class _ShellState extends State<Shell> {
             label: 'Ajustes',
           ),
         ],
-      ),
-    );
-  }
-}
-
-class _Placeholder extends StatelessWidget {
-  final String title;
-  const _Placeholder({required this.title});
-
-  @override
-  Widget build(BuildContext context) {
-    return Center(
-      child: Text(
-        title,
-        style: const TextStyle(
-          color: AppColors.textSecondary,
-          fontSize: 24,
-        ),
       ),
     );
   }
