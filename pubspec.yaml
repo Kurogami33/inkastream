@@ -10,6 +10,9 @@ dependencies:
   flutter:
     sdk: flutter
   material_symbols_icons: ^4.2928.1
+  http: ^1.2.0
+  html: ^0.15.4
+  shared_preferences: ^2.2.2
 
 flutter:
   uses-material-design: true
