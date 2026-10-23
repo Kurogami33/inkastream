@@ -5,13 +5,20 @@ import 'package:media_kit/media_kit.dart';
 import 'package:media_kit_video/media_kit_video.dart';
 import '../models.dart';
 import '../player/external.dart';
+import '../store/progress_store.dart';
 import '../theme.dart';
 
 class PlayerScreen extends StatefulWidget {
   final String title;
   final List<StreamLink> links;
+  final String poster;
 
-  const PlayerScreen({super.key, required this.title, required this.links});
+  const PlayerScreen({
+    super.key,
+    required this.title,
+    required this.links,
+    this.poster = '',
+  });
 
   @override
   State<PlayerScreen> createState() => _PlayerScreenState();
@@ -20,7 +27,9 @@ class PlayerScreen extends StatefulWidget {
 class _PlayerScreenState extends State<PlayerScreen> {
   late final Player _player = Player();
   late final VideoController _controller = VideoController(_player);
+  final _progress = ProgressStore();
   final List<StreamSubscription> _subs = [];
+  Timer? _timer;
   int _index = 0;
   Duration _lastPos = Duration.zero;
   bool _switching = false;
@@ -35,17 +44,41 @@ class _PlayerScreenState extends State<PlayerScreen> {
     _subs.add(_player.stream.error.listen((e) {
       _failover(e);
     }));
-    _open(0, Duration.zero);
+    _timer = Timer.periodic(const Duration(seconds: 10), (_) => _saveNow());
+    _start();
+  }
+
+  Future<void> _start() async {
+    Duration start = Duration.zero;
+    try {
+      final p = await _progress.get(widget.title);
+      if (p != null && p.positionMs > 5000) {
+        start = Duration(milliseconds: p.positionMs);
+      }
+    } catch (_) {}
+    if (!mounted) return;
+    _lastPos = start;
+    if (start > Duration.zero) {
+      final m = start.inMinutes;
+      final s = start.inSeconds % 60;
+      setState(() => _status =
+          'Retomando en $m:${s.toString().padLeft(2, '0')}');
+    }
+    await _open(0, start);
+  }
+
+  void _saveNow() {
+    _progress.save(
+      title: widget.title,
+      position: _player.state.position,
+      duration: _player.state.duration,
+      poster: widget.poster,
+    );
   }
 
   Future<void> _open(int i, Duration start) async {
     if (i < 0 || i >= widget.links.length) return;
-    if (mounted) {
-      setState(() {
-        _index = i;
-        _status = null;
-      });
-    }
+    if (mounted) setState(() => _index = i);
     await _player.open(Media(widget.links[i].url, start: start));
   }
 
@@ -77,6 +110,8 @@ class _PlayerScreenState extends State<PlayerScreen> {
 
   @override
   void dispose() {
+    _timer?.cancel();
+    _saveNow();
     for (final s in _subs) {
       s.cancel();
     }
